@@ -58,7 +58,7 @@ jobs:
         cd frontend
         go test -v
 
- containerization:
+  containerization:
     needs: test
     runs-on: ubuntu-latest
     
@@ -74,3 +74,4 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+        
