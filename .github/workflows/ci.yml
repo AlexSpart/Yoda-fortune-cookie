@@ -2,11 +2,12 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ "feature/*" ]
+    branches: [ "feature/*", "dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
 
 jobs:
+# Build frontend & backend and archive artifacts
   build:
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +23,37 @@ jobs:
         cd backend
         go mod download github.com/gomodule/redigo
         go build -v
+
     - name: Build Frontend
       run: |
         cd frontend
         go build -v
+
+    - name: Upload Backend Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: backend
+        path: backend/
+        if-no-files-found: error
+        retention-days: 1
+    
+    - name: Upload Frontend Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: frontend
+        path: frontend/
+        if-no-files-found: error
+        retention-days: 1
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    # Test frontend
+    - name: Test
+      run: |
+        cd frontend
+        go test -v
