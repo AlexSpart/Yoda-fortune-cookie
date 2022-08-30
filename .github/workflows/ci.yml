@@ -45,9 +45,15 @@ jobs:
         if-no-files-found: error
         retention-days: 1
 
-# Test frontend
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    # Test frontend
     - name: Test
       run: |
         cd frontend
         go test -v
-
