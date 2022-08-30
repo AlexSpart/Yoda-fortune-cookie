@@ -3,7 +3,6 @@ name: Continuous Integration
 on:
   push:
     branches: [ "feature/*" ]
-    branches: [ "dev/*" ]
   pull_request:
     branches: [ "main" ]
 
