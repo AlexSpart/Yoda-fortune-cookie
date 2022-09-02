@@ -1,0 +1,70 @@
+name: Azure Kubernetes Deployment
+
+on: 
+  pull_request:
+    types: [labeled]
+
+env:
+  AZURE_RESOURCE_GROUP: spartdemo
+  AKS_CLUSTER_NAME: yoda-cookie-aks
+  AKS_CLUSTER_VERSION: 'v1.23.5'
+  AKS_NAMESPACE: yoda-cookie
+  IMAGE_REGISTRY_URL: docker.pkg.github.com
+
+jobs:
+
+  Deploy-to-Azure:
+
+    if: contains(github.event.pull_request.labels.*.name, 'k8s deploy')
+
+    runs-on: ubuntu-latest
+    name: Deploy to AKS
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - uses: azure/setup-kubectl@v2.0
+        with:
+          version: ${{ env.AKS_CLUSTER_VERSION }}
+
+       # Set the target AKS cluster.
+      - uses: Azure/aks-set-context@v1
+        with:
+           creds: ${{ secrets.AZURE_CREDENTIALS }}
+           cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+           resource-group: ${{ env.AZURE_RESOURCE_GROUP }}
+
+      - uses: Azure/k8s-create-secret@v1.1
+        with:
+           container-registry-url: ${{env.IMAGE_REGISTRY_URL}}
+           container-registry-username: ${{ github.actor }}
+           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+           secret-name: cr-k8s-secret
+           namespace: ${{ env.AKS_NAMESPACE }}
+
+      - uses: Azure/k8s-deploy@v3.1
+        with:
+           action: deploy
+           namespace: ${{ env.AKS_NAMESPACE }}
+           strategy: basic
+           manifests: |
+             manifests/release.yaml
+#             manifests/backend-deployment.yaml
+#             manifests/backend-service.yaml
+#             manifests/frontend-deployment.yaml
+#             manifests/frontend-service.yaml
+           images: |
+              ghcr.io/alexspart/backend:latest
+              ghcr.io/alexspart/frontend:latest
+           imagepullsecrets: |
+              cr-k8s-secret
+
+      - name: Azure logout
+        run: |
+          az logout
