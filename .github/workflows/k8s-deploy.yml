@@ -55,10 +55,7 @@ jobs:
            strategy: basic
            manifests: |
              manifests/release.yaml
-#             manifests/backend-deployment.yaml
-#             manifests/backend-service.yaml
-#             manifests/frontend-deployment.yaml
-#             manifests/frontend-service.yaml
+             manifests/release_deployment.yaml
            images: |
               ghcr.io/alexspart/backend:latest
               ghcr.io/alexspart/frontend:latest
