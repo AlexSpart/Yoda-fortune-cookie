@@ -54,8 +54,8 @@ jobs:
            namespace: ${{ env.AKS_NAMESPACE }}
            strategy: basic
            manifests: |
-             manifests/release.yaml
              manifests/release_deployment.yaml
+            #  manifests/release.yaml
            images: |
               ghcr.io/alexspart/backend:latest
               ghcr.io/alexspart/frontend:latest
