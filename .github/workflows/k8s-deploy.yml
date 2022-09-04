@@ -1,7 +1,8 @@
-name: Azure Kubernetes Deployment
+name: Azure Kubernetes Deployment of Yoda-cookie app
 
 on: 
   pull_request:
+    branches: ["k8s-deployment"]
     types: [labeled]
 
 env:
