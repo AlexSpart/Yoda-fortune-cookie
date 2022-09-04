@@ -2,8 +2,8 @@ name: Azure Kubernetes Deployment of Yoda-cookie app
 
 on: 
   pull_request:
-    branches: ["k8s-deployment"]
     types: [labeled]
+    branches: [ "k8s-deployment" ]
 
 env:
   AZURE_RESOURCE_GROUP: spartdemo
