@@ -2,7 +2,7 @@ name: Continuous Integration - Build, test , create and Push Container Image to 
 
 on:
   push:
-    branches: [ "irvine-demo/**" ]
+    branches: [ "irvine-demo", "irvine-demo/**" ]
   pull_request:
     branches: [ "main", "dev", "k8s-deployment", "irvine-demo" ]
 
