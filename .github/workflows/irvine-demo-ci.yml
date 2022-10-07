@@ -1,0 +1,110 @@
+name: Continuous Integration - Build, test , create and Push Container Image to Github container registry
+
+on:
+  push:
+    branches: [ "irvine-demo/**" ]
+  pull_request:
+    branches: [ "main", "dev", "k8s-deployment", "irvine-demo" ]
+
+jobs:
+  ggolangci-lint:
+    name: runner / golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          golangci_lint_flags: "--enable-all --exclude-use-default=false"
+# Build frontend & backend and archive artifacts
+  build:
+    needs: ggolangci-lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+        
+    - name: Build Backend
+      run: |
+        cd backend
+        go mod download github.com/gomodule/redigo
+        go build -v
+
+    - name: Build Frontend
+      run: |
+        cd frontend
+        go build -v
+
+    - name: Upload Backend Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: backend
+        path: backend/
+        if-no-files-found: error
+        retention-days: 1
+    
+    - name: Upload Frontend Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: frontend
+        path: frontend/
+        if-no-files-found: error
+        retention-days: 1
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    # Test frontend
+    - name: Test
+      run: |
+        cd frontend
+        go test -v
+
+  containerization:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3.0.0
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and Push Backend Container Image
+      uses: mr-smithers-excellent/docker-build-push@v5
+      with:
+        image: backend
+        registry: ghcr.io
+        dockerfile: backend/Dockerfile
+        directory: backend
+        tags: latest
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and Push Frontend Container Image
+      uses: mr-smithers-excellent/docker-build-push@v5
+      with:
+        image: frontend
+        registry: ghcr.io
+        dockerfile: frontend/Dockerfile
+        directory: frontend
+        tags: latest
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
